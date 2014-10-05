@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# Utility script for Lil' Debi startup and shutdown; invoke as
+# "ld start" or "ld stop" from the provided hooks.
+
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin
+
+case $1 in
+  start) echo ld startup
+    /etc/init.d/busybox-syslogd start
+
+    watchprops-netevents.gawk <(exec /system/bin/watchprops 2>&1) \
+      | exec logger -t watchprops-netevents &
+
+    /etc/init.d/openvpn start
+    /etc/init.d/ssh start
+    ;;
+  stop) echo ld shut 
+    /etc/init.d/openvpn stop
+    /etc/init.d/ssh stop
+    /etc/init.d/busybox-syslogd stop
+
+    # We let everything else get killed by the usual Lil' Debi process
+    ;;
+esac
